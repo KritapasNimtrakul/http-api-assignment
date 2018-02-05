@@ -4,8 +4,106 @@
   <title>Our simple HTTP server</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+        
+        
+    //function to handle our xhr response
+    const handleResponse = (xhr,typeOp) => { 
+      //grab the content section
+      const content = document.querySelector("#content");
+        
+        switch(xhr.status) {
+        case 200: //if success
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 400: //if bad request
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 401: //if bad request
+          content.innerHTML = `<b>Unauthorized</b>`;
+          break;
+        case 403: //if bad request
+          content.innerHTML = `<b>Forbidden</b>`;
+          break;
+        case 500: //if bad request
+          content.innerHTML = `<b>Internal Server Error</b>`;
+          break;
+        case 501: //if bad request
+          content.innerHTML = `<b>Not Implemented</b>`;
+          break;
+        default: //any other status
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+      }
+        if(typeOp === 'application/json'){
+        //parse the object and print it
+        const obj = JSON.parse(xhr.response);
+        content.innerHTML += `<p>Message: ${obj.message}`;
+        console.dir(obj);   
+        } else if(typeOp === 'text/xml'){
+            let xml = xhr.response;
+            xml = xml.replace(/['"]+/g, '');
+            let res = xml.split(',');
+
+            let respond = document.createElement('response');
+            let message = document.createElement('message');
+            let id = document.createElement('id');
+            message.innerHTML = res[0];
+            if(res.length > 1){
+                id.innerHTML =res[1];
+                message.appendChild(id);
+            }
+            respond.appendChild(message);
+            content.innerHTML += `<p>Message: ${res[0]}`;
+            console.log(respond);
+        }
+        
+    };
+    
+    //function to send ajax
+    const sendAjax = (e,url,typeOp) => {
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.open('GET', url);
+
+      xhr.setRequestHeader ("Accept", typeOp);
+
+      xhr.onload = () => handleResponse(xhr,typeOp);
+
+      xhr.send();
+              
+      e.preventDefault();
+      //return false to prevent page redirection from a form
+      return false;
+    };
+
+    //initialization function
+    const init = () => {
+        
+        let option = '/success';
+        let optionType = 'application/json';
+        const statusOption = document.querySelector('#page');
+        statusOption.addEventListener('change', function(e){
+            option = e.target.value;
+            console.log(option);
+        });
+        
+        const typeOption = document.querySelector('#type');
+        typeOption.addEventListener('change', function(e){
+            optionType = e.target.value;
+        });
+        
+        
+        const sendButton = document.querySelector("#send");
+        
+        const sendRequest = (e) => sendAjax(e,option+'?type='+optionType,optionType);
+        
+        sendButton.addEventListener('click', sendRequest);
+    };
+
+    window.onload = init;
 
   </script>
 </head>
